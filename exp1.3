@@ -1,0 +1,115 @@
+Part A: Simulating a Deadlock Between Two Transactions
+CREATE TABLE StudentEnrollments (
+    student_id INT PRIMARY KEY,
+    student_name VARCHAR(100),
+    course_id VARCHAR(10),
+    enrollment_date DATE
+);
+
+INSERT INTO StudentEnrollments VALUES
+(1, 'Ashish', 'CSE101', '2024-06-01'),
+(2, 'Smaran', 'CSE102', '2024-06-01'),
+(3, 'Vaibhav', 'CSE103', '2024-06-01');
+
+Simulation (in two terminals):
+
+User 1:
+
+START TRANSACTION;
+UPDATE StudentEnrollments SET enrollment_date = '2024-07-01' WHERE student_id = 1;
+-- (User 1 now holds a lock on row with student_id = 1)
+
+
+User 2:
+
+START TRANSACTION;
+UPDATE StudentEnrollments SET enrollment_date = '2024-07-02' WHERE student_id = 2;
+-- (User 2 now holds a lock on row with student_id = 2)
+
+
+Now both try to update the row locked by the other:
+
+User 1 (second step):
+
+UPDATE StudentEnrollments SET enrollment_date = '2024-08-01' WHERE student_id = 2;
+-- Waits for User 2, but User 2 already has it
+
+
+User 2 (second step):
+
+UPDATE StudentEnrollments SET enrollment_date = '2024-08-01' WHERE student_id = 1;
+-- Deadlock! Database detects cycle
+
+
+Result:
+The DB detects deadlock and automatically rolls back one transaction. Example in MySQL:
+
+ERROR 1213 (40001): Deadlock found when trying to get lock; try restarting transaction
+
+Part B: Applying MVCC to Prevent Conflicts During Concurrent Reads/Writes
+Simulation:
+
+User A (Reader):
+
+SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+START TRANSACTION;
+
+SELECT * FROM StudentEnrollments WHERE student_id = 1;
+-- Returns: enrollment_date = 2024-06-01
+
+
+User B (Writer):
+
+START TRANSACTION;
+
+UPDATE StudentEnrollments
+SET enrollment_date = '2024-07-10'
+WHERE student_id = 1;
+
+COMMIT;
+
+
+User A (still inside same transaction):
+
+SELECT * FROM StudentEnrollments WHERE student_id = 1;
+
+
+User A commits:
+
+COMMIT;
+
+Part C: Comparing Behavior With and Without MVCC
+Scenario 1: Traditional Locking (Blocking Reads)
+
+User A:
+
+START TRANSACTION;
+SELECT * FROM StudentEnrollments
+WHERE student_id = 1 FOR UPDATE;
+-- Row is locked
+
+
+User B:
+
+START TRANSACTION;
+SELECT * FROM StudentEnrollments
+WHERE student_id = 1;
+-- BLOCKED until User A commits!
+
+Scenario 2: MVCC (Non-Blocking Reads)
+
+User A:
+SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+START TRANSACTION;
+SELECT * FROM StudentEnrollments WHERE student_id = 1;
+-- Returns 2024-06-01
+
+User B:
+START TRANSACTION;
+UPDATE StudentEnrollments
+SET enrollment_date = '2024-07-10'
+WHERE student_id = 1;
+COMMIT;
+
+User A (still open transaction):
+SELECT * FROM StudentEnrollments WHERE student_id = 1;
