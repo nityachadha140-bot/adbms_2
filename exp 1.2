@@ -1,0 +1,83 @@
+Part A: Prevent Duplicate Enrollments Using Locking
+CREATE TABLE StudentEnrollments (
+    enrollment_id INT PRIMARY KEY AUTO_INCREMENT,
+    student_name VARCHAR(100) NOT NULL,
+    course_id VARCHAR(10) NOT NULL,
+    enrollment_date DATE NOT NULL,
+    CONSTRAINT unique_student_course UNIQUE (student_name, course_id)
+);
+User 1:
+
+START TRANSACTION;
+
+INSERT INTO StudentEnrollments (student_name, course_id, enrollment_date)
+VALUES ('Ashish', 'CSE101', '2024-07-01');
+
+COMMIT;
+
+
+User 2 (at the same time):
+
+START TRANSACTION;
+
+INSERT INTO StudentEnrollments (student_name, course_id, enrollment_date)
+VALUES ('Ashish', 'CSE101', '2024-07-01');
+
+COMMIT;
+
+Result:
+
+User 1 succeeds.
+
+User 2 gets an error:
+
+ERROR: duplicate key value violates unique constraint "unique_student_course"
+
+
+Part B: Use SELECT FOR UPDATE to Lock Student Record
+User A:
+START TRANSACTION;
+SELECT * FROM StudentEnrollments
+WHERE student_name = 'Ashish' AND course_id = 'CSE101'
+FOR UPDATE;
+User B (while User A’s transaction is still open):
+START TRANSACTION;
+
+UPDATE StudentEnrollments
+SET enrollment_date = '2024-07-02'
+WHERE student_name = 'Ashish' AND course_id = 'CSE101';
+
+COMMIT;
+
+
+Part C: Locking Preserves Consistency in Concurrent Transactions
+Case 1: Without Locking
+User A:
+START TRANSACTION;
+UPDATE StudentEnrollments
+SET enrollment_date = '2024-07-05'
+WHERE enrollment_id = 1;
+User B:
+START TRANSACTION;
+UPDATE StudentEnrollments
+SET enrollment_date = '2024-07-10'
+WHERE enrollment_id = 1;
+COMMIT;
+Then User A commits:
+COMMIT;
+
+Case 2: With Locking (SELECT FOR UPDATE)
+User A:
+START TRANSACTION;
+SELECT * FROM StudentEnrollments
+WHERE enrollment_id = 1
+FOR UPDATE;
+
+UPDATE StudentEnrollments
+SET enrollment_date = '2024-07-05'
+WHERE enrollment_id = 1;
+User B:
+START TRANSACTION;
+SELECT * FROM StudentEnrollments
+WHERE enrollment_id = 1
+FOR UPDATE;
