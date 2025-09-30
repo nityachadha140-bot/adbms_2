@@ -1,0 +1,95 @@
+//package.js
+{
+  "name": "exp3",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "axios": "^1.12.2",
+    "cors": "^2.8.5",
+    "express": "^5.1.0"
+  }
+}
+//routes.js
+const express = require("express");
+const { getSeats, lockSeat, confirmSeat } = require("./seats");
+
+const router = express.Router();
+
+router.get("/seats", (req, res) => {
+  res.json(getSeats());
+});
+
+router.post("/lock/:id", (req, res) => {
+  const userId = req.body.userId;
+  res.status(200).json(lockSeat(req.params.id, userId));
+});
+
+router.post("/confirm/:id", (req, res) => {
+  const userId = req.body.userId;
+  res.status(200).json(confirmSeat(req.params.id, userId));
+});
+
+module.exports = router;
+//seats.js
+const LOCK_TTL_MS = 60 * 1000;
+const NUM_SEATS = 10;
+
+const seats = {};
+for (let i = 1; i <= NUM_SEATS; i++) {
+  seats[i] = { status: "available", lockTimer: null, owner: null };
+}
+
+function lockSeat(seatId, userId) {
+  const seat = seats[seatId];
+  if (!seat) return { message: "Seat not found" };
+  if (seat.status !== "available") return { message: "Seat not available" };
+
+  seat.status = "locked";
+  seat.owner = userId;
+  seat.lockTimer = setTimeout(() => {
+    seat.status = "available";
+    seat.owner = null;
+  }, LOCK_TTL_MS);
+
+  return { message: `Seat ${seatId} locked for 1 minute.` };
+}
+
+function confirmSeat(seatId, userId) {
+  const seat = seats[seatId];
+  if (!seat) return { message: "Seat not found" };
+  if (seat.status !== "locked" || seat.owner !== userId)
+    return { message: "Seat not locked by you" };
+
+  clearTimeout(seat.lockTimer);
+  seat.status = "booked";
+  seat.owner = null;
+
+  return { message: `Seat ${seatId} booked successfully.` };
+}
+
+function getSeats() {
+  const result = {};
+  for (const id in seats) {
+    result[id] = { status: seats[id].status };
+  }
+  return result;
+}
+
+module.exports = { lockSeat, confirmSeat, getSeats };
+//server.js
+const express = require("express");
+const routes = require("./routes");
+
+const app = express();
+app.use(express.json());
+app.use("/", routes);
+
+app.listen(3000, () => console.log("Server running on http://localhost:3000"));
