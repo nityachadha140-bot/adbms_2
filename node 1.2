@@ -1,0 +1,93 @@
+//app.js
+import express from 'express';
+import cardRoutes from './routes/routes.js'; 
+
+const app = express();
+const PORT = 5000;
+
+app.use(express.json()); 
+
+app.use('/cards', cardRoutes);
+
+app.get('/', (req, res) => {
+  res.send('Welcome to Card API!');
+});
+
+app.listen(PORT, () => {
+  console.log(`Server running at http://localhost:${PORT}`);
+});
+//cards.js
+export const cards = [
+  { id: 1, suit: "Hearts", value: "King" },
+  { id: 2, suit: "Spades", value: "Ace" },
+  { id: 3, suit: "Clubs", value: "Queen" }
+];
+//package.js
+{
+  "name": "exp2",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+     "start": "node app.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "uuid": "^13.0.0"
+  }
+}
+//routes.js
+import express from 'express';
+import { cards } from '../data/cards.js';
+
+const router = express.Router();
+
+router.get('/', (req, res) => {
+  res.json(cards);
+});
+
+router.get('/:id', (req, res) => {
+  const cardId = parseInt(req.params.id); 
+  const card = cards.find(c => c.id === cardId);
+
+  if (card) {
+    res.json(card);
+  } else {
+    res.status(404).json({ message: 'Card not found' });
+  }
+});
+
+
+router.post('/', (req, res) => {
+  const { suit, value } = req.body;
+  if (!suit || !value) {
+    return res.status(400).json({ message: 'Suit and Value are required' });
+  }
+
+  const newId = cards.length ? cards[cards.length - 1].id + 1 : 1;
+  const newCard = { id: newId, suit, value };
+  cards.push(newCard);
+
+  res.status(201).json({ message: 'Card added', card: newCard });
+});
+
+
+router.delete('/:id', (req, res) => {
+  const cardId = parseInt(req.params.id);
+  const index = cards.findIndex(c => c.id === cardId);
+
+  if (index > -1) {
+    const removed = cards.splice(index, 1);
+    res.json({ message: 'Card removed', card: removed[0] });
+  } else {
+    res.status(404).json({ message: 'Card not found' });
+  }
+});
+
+export default router;
