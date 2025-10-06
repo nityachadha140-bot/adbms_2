@@ -1,0 +1,127 @@
+ Part A: Sorting Employee Objects Using Lambda Expressions
+import java.util.*;
+
+class Employee {
+    String name;
+    int age;
+    double salary;
+
+    Employee(String name, int age, double salary) {
+        this.name = name;
+        this.age = age;
+        this.salary = salary;
+    }
+
+    public String toString() {
+        return name + " - Age: " + age + ", Salary: " + salary;
+    }
+}
+
+public class SortEmployees {
+    public static void main(String[] args) {
+        List<Employee> employees = new ArrayList<>();
+        employees.add(new Employee("Nitya", 25, 60000));
+        employees.add(new Employee("Aarav", 30, 55000));
+        employees.add(new Employee("Riya", 22, 70000));
+
+        System.out.println("Sort by Name:");
+        employees.sort((e1, e2) -> e1.name.compareTo(e2.name));
+        employees.forEach(System.out::println);
+
+        System.out.println("\nSort by Age:");
+        employees.sort((e1, e2) -> Integer.compare(e1.age, e2.age));
+        employees.forEach(System.out::println);
+
+        System.out.println("\nSort by Salary (Descending):");
+        employees.sort((e1, e2) -> Double.compare(e2.salary, e1.salary));
+        employees.forEach(System.out::println);
+    }
+}
+
+ Part B: Filtering and Sorting Students Using Streams
+import java.util.*;
+import java.util.stream.*;
+
+class Student {
+    String name;
+    double marks;
+
+    Student(String name, double marks) {
+        this.name = name;
+        this.marks = marks;
+    }
+}
+
+public class StreamStudents {
+    public static void main(String[] args) {
+        List<Student> students = Arrays.asList(
+            new Student("Nitya", 82),
+            new Student("Aarav", 68),
+            new Student("Riya", 90),
+            new Student("Kabir", 74)
+        );
+
+        System.out.println("Students scoring above 75% sorted by marks:");
+        students.stream()
+                .filter(s -> s.marks > 75)
+                .sorted((s1, s2) -> Double.compare(s2.marks, s1.marks))
+                .map(s -> s.name + " (" + s.marks + "%)")
+                .forEach(System.out::println);
+    }
+}
+
+ Part C: Stream Operations on Product Dataset
+import java.util.*;
+import java.util.stream.*;
+import java.util.Comparator;
+
+class Product {
+    String name;
+    double price;
+    String category;
+
+    Product(String name, double price, String category) {
+        this.name = name;
+        this.price = price;
+        this.category = category;
+    }
+
+    public String toString() {
+        return name + " (" + category + ") - ₹" + price;
+    }
+}
+
+public class ProductStreamOperations {
+    public static void main(String[] args) {
+        List<Product> products = Arrays.asList(
+            new Product("Laptop", 70000, "Electronics"),
+            new Product("Phone", 40000, "Electronics"),
+            new Product("Shirt", 1500, "Clothing"),
+            new Product("Jeans", 2500, "Clothing"),
+            new Product("Mixer", 3500, "Appliances"),
+            new Product("TV", 55000, "Electronics")
+        );
+
+        // Group products by category
+        System.out.println("Products Grouped by Category:");
+        Map<String, List<Product>> grouped = products.stream()
+                .collect(Collectors.groupingBy(p -> p.category));
+        grouped.forEach((cat, list) -> {
+            System.out.println(cat + ": " + list);
+        });
+
+        System.out.println("\nMost Expensive Product by Category:");
+        Map<String, Optional<Product>> maxByCategory = products.stream()
+                .collect(Collectors.groupingBy(
+                    p -> p.category,
+                    Collectors.maxBy(Comparator.comparingDouble(p -> p.price))
+                ));
+        maxByCategory.forEach((cat, prod) ->
+            System.out.println(cat + ": " + prod.orElse(null))
+        );
+
+        double avgPrice = products.stream()
+                .collect(Collectors.averagingDouble(p -> p.price));
+        System.out.println("\nAverage Price of All Products: ₹" + avgPrice);
+    }
+}
