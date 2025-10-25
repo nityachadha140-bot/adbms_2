@@ -1,0 +1,110 @@
+import React, { useState } from "react";
+
+function App() {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    if (username.trim() === "" || password.trim() === "") {
+      setError("Please enter both username and password.");
+    } else {
+      setError("");
+      console.log("Username:", username);
+      console.log("Password:", password);
+    }
+  };
+
+  // Inline CSS styles
+  const styles = {
+    container: {
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      height: "100vh",
+      backgroundColor: "#f8f9fa",
+    },
+    box: {
+      backgroundColor: "#fff",
+      padding: "30px 40px",
+      borderRadius: "10px",
+      boxShadow: "0 0 10px rgba(0,0,0,0.1)",
+      width: "320px",
+      textAlign: "center",
+    },
+    title: {
+      marginBottom: "20px",
+      fontWeight: "bold",
+    },
+    input: {
+      width: "100%",
+      padding: "10px",
+      marginBottom: "15px",
+      border: "1px solid #ccc",
+      borderRadius: "5px",
+      fontSize: "14px",
+    },
+    button: {
+      width: "100%",
+      backgroundColor: "#007bff",
+      color: "white",
+      padding: "10px",
+      border: "none",
+      borderRadius: "5px",
+      fontSize: "15px",
+      cursor: "pointer",
+    },
+    buttonHover: {
+      backgroundColor: "#0056b3",
+    },
+    error: {
+      color: "red",
+      marginBottom: "10px",
+      fontSize: "14px",
+    },
+  };
+
+  return (
+    <div style={styles.container}>
+      <div style={styles.box}>
+        <h2 style={styles.title}>Login</h2>
+        <form onSubmit={handleSubmit}>
+          <input
+            type="text"
+            placeholder="Username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            style={styles.input}
+          />
+
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            style={styles.input}
+          />
+
+          {error && <p style={styles.error}>{error}</p>}
+
+          <button
+            type="submit"
+            style={styles.button}
+            onMouseOver={(e) =>
+              (e.currentTarget.style.backgroundColor = "#0056b3")
+            }
+            onMouseOut={(e) =>
+              (e.currentTarget.style.backgroundColor = "#007bff")
+            }
+          >
+            Login
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+export default App;
