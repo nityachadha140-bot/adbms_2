@@ -1,0 +1,115 @@
+Part 1: Express.js Backend (API Server)
+Create a new folder:
+mkdir express-api
+cd express-api
+npm init -y
+npm install express cors
+
+server.js
+const express = require("express");
+const cors = require("cors");
+
+const app = express();
+app.use(cors()); // Allow React frontend to access this API
+
+// Sample product data
+const products = [
+  { id: 1, name: "Laptop", price: 80000 },
+  { id: 2, name: "Smartphone", price: 45000 },
+  { id: 3, name: "Headphones", price: 2000 },
+];
+
+// API endpoint to return products
+app.get("/api/products", (req, res) => {
+  res.json(products);
+});
+
+const PORT = 5000;
+app.listen(PORT, () => console.log(Server running on port ${PORT}));
+
+Run the server:
+node server.js
+
+
+Now open http://localhost:5000/api/products
+
+You should see the JSON output of the product list.
+
+Part 2: React Frontend
+Create a new React app:
+npx create-react-app react-frontend
+cd react-frontend
+npm install axios
+
+ src/App.js
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+
+function App() {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    axios
+      .get("http://localhost:5000/api/products")
+      .then((response) => {
+        setProducts(response.data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError("Failed to fetch products");
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) return <h2>Loading products...</h2>;
+  if (error) return <h2 style={{ color: "red" }}>{error}</h2>;
+
+  return (
+    <div style={{ margin: "40px" }}>
+      <h1>Product List</h1>
+      <ul style={{ listStyleType: "none", padding: 0 }}>
+        {products.map((p) => (
+          <li
+            key={p.id}
+            style={{
+              border: "1px solid #ddd",
+              padding: "10px",
+              marginBottom: "8px",
+              borderRadius: "8px",
+            }}
+          >
+            <strong>{p.name}</strong> — ₹{p.price}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+export default App;
+
+Run the React app:
+npm start
+
+
+Expected Output
+
+When both servers are running, you should see:
+
+Product List
+-------------
+Laptop — ₹80000
+Smartphone — ₹45000
+Headphones — ₹2000
+
+
+And while loading, it should show:
+
+Loading products...
+
+
+If an error occurs:
+
+Failed to fetch products
